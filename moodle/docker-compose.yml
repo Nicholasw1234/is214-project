@@ -1,6 +1,15 @@
-version: '3.8'
-
 services:
+  docker:
+    image: docker:dind
+    restart: always
+    privileged: true
+    environment:
+      - DOCKER_TLS_CERTDIR=
+    volumes:
+      - docker_data:/var/lib/docker
+    ports:
+      - "2375:2375"
+
   db:
     image: bitnami/mariadb:latest
     restart: always
@@ -12,6 +21,8 @@ services:
       - ALLOW_EMPTY_PASSWORD=yes
     volumes:
       - mariadb_data:/bitnami/mariadb
+    depends_on:
+      - docker
 
   moodle:
     image: docker.io/bitnamilegacy/moodle:4.5
@@ -28,11 +39,15 @@ services:
       - PHP_MEMORY_LIMIT=512M
     volumes:
       - moodle_data:/bitnami/moodle
+      - /var/run/docker.sock:/var/run/docker.sock
     depends_on:
       - db
+      - docker
 
 volumes:
   mariadb_data:
     driver: local
   moodle_data:
+    driver: local
+  docker_data:
     driver: local
