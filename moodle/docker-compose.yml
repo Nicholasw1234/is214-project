@@ -1,15 +1,4 @@
 services:
-  docker:
-    image: docker:dind
-    restart: always
-    privileged: true
-    environment:
-      - DOCKER_TLS_CERTDIR=
-    volumes:
-      - docker_data:/var/lib/docker
-    ports:
-      - "2375:2375"
-
   db:
     image: bitnami/mariadb:latest
     restart: always
@@ -19,35 +8,44 @@ services:
       - MARIADB_USER=moodle
       - MARIADB_PASSWORD=bitnami
       - ALLOW_EMPTY_PASSWORD=yes
+      - MARIADB_CHARACTER_SET=utf8mb4
+      - MARIADB_COLLATE=utf8mb4_unicode_ci
     volumes:
       - mariadb_data:/bitnami/mariadb
-    depends_on:
-      - docker
+    healthcheck:
+      test: ["CMD", "/opt/bitnami/mariadb/bin/mysql", "-u", "moodle", "-pbitnami", "-e", "SELECT 1", "moodle"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   moodle:
-    image: docker.io/bitnamilegacy/moodle:4.5
+    image: docker.io/bitnamilegacy/moodle:4.1
     restart: always
     ports:
       - "8080:8080"
     environment:
       - MOODLE_DATABASE_HOST=db
+      - MOODLE_DATABASE_PORT_NUMBER=3306
       - MOODLE_DATABASE_USER=moodle
       - MOODLE_DATABASE_PASSWORD=bitnami
       - MOODLE_DATABASE_NAME=moodle
-      - MOODLE_SITE_URL=http://40.82.130.11:8080
+      - MOODLE_DATABASE_TYPE=mariadb
+      - MOODLE_USERNAME=admin
+      - MOODLE_PASSWORD=adminpassword
+      - MOODLE_SITE_URL=http://localhost:8080
+      - MOODLE_EMAIL=admin@example.com
       - ALLOW_EMPTY_PASSWORD=yes
       - PHP_MEMORY_LIMIT=512M
+      - LC_ALL=C.UTF-8
+      - LANG=C.UTF-8
     volumes:
       - moodle_data:/bitnami/moodle
-      - /var/run/docker.sock:/var/run/docker.sock
     depends_on:
-      - db
-      - docker
+      db:
+        condition: service_healthy
 
 volumes:
   mariadb_data:
     driver: local
   moodle_data:
-    driver: local
-  docker_data:
     driver: local
