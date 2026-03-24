@@ -1,0 +1,49 @@
+# Docker volumes / persistent data
+moodledata/
+*.sql
+*.dump
+
+# Docker build artifacts
+*.log
+*.pid
+*.sock
+
+# Environment files with secrets
+.env
+.env.local
+.env.*.local
+docker-compose.override.yml
+
+# IDE / Editor
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# OS files
+Thumbs.db
+.AppleDouble
+.LSOverride
+
+# Moodle generated files (if mounted locally)
+config.php
+phpunit.xml
+behat_config.yml
+
+# Build / cache
+node_modules/
+vendor/
+*.cache
+.phpunit.result.cache
+
+# Logs
+logs/
+*.log
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.bak
