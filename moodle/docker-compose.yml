@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  db:
+    image: bitnami/mariadb:latest
+    restart: always
+    environment:
+      - MARIADB_ROOT_PASSWORD=rootpassword
+      - MARIADB_DATABASE=moodle
+      - MARIADB_USER=moodle
+      - MARIADB_PASSWORD=bitnami
+      - ALLOW_EMPTY_PASSWORD=yes
+    volumes:
+      - mariadb_data:/bitnami/mariadb
+
+  moodle:
+    image: docker.io/bitnamilegacy/moodle:4.5
+    restart: always
+    ports:
+      - "8080:8080"
+    environment:
+      - MOODLE_DATABASE_HOST=db
+      - MOODLE_DATABASE_USER=moodle
+      - MOODLE_DATABASE_PASSWORD=bitnami
+      - MOODLE_DATABASE_NAME=moodle
+      - MOODLE_SITE_URL=http://40.82.130.11:8080
+      - ALLOW_EMPTY_PASSWORD=yes
+      - PHP_MEMORY_LIMIT=512M
+    volumes:
+      - moodle_data:/bitnami/moodle
+    depends_on:
+      - db
+
+volumes:
+  mariadb_data:
+    driver: local
+  moodle_data:
+    driver: local
