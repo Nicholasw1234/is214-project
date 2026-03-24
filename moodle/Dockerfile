@@ -3,7 +3,7 @@ FROM moodlehq/moodle-php-apache:8.3
 ARG MOODLE_VERSION=405
 ARG MOODLE_RELEASE=4.5.10
 
-# Install system dependencies and PHP extensions required by Moodle 4.5
+# Install system dependencies and PHP extensions
 RUN apt-get update && apt-get install -y --no-install-recommends \
         curl \
         unzip \
@@ -12,7 +12,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         libjpeg-dev \
         libfreetype6-dev \
         libicu-dev \
-        libxml2-dev \
         libxslt-dev \
         libldap2-dev \
         libsodium-dev \
@@ -20,29 +19,20 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         libssl-dev \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install -j$(nproc) \
-        gd \
-        intl \
-        mysqli \
-        pdo_mysql \
-        soap \
-        xsl \
-        zip \
-        opcache \
-        sodium \
-        ldap \
-        mbstring \
-        exif \
-        pcntl \
+        gd intl mysqli pdo_mysql soap xsl zip opcache sodium ldap mbstring exif pcntl \
     && rm -rf /var/lib/apt/lists/* /tmp/pear
 
-# Download and extract Moodle from official source
+# Download and extract Moodle with correct ownership from the start
 RUN curl -fSL "https://download.moodle.org/download.php/direct/stable${MOODLE_VERSION}/moodle-${MOODLE_RELEASE}.tgz" \
         -o /tmp/moodle.tgz \
     && tar -xzf /tmp/moodle.tgz -C /tmp \
     && cp -r /tmp/moodle/. /var/www/html/ \
-    && rm -rf /tmp/moodle /tmp/moodle.tgz
+    && rm -rf /tmp/moodle /tmp/moodle.tgz \
+    && chown -R www-data:www-data /var/www/html \
+    && find /var/www/html -type d -exec chmod 755 {} + \
+    && find /var/www/html -type f -exec chmod 644 {} +
 
-# PHP tuning for Moodle 4.5
+# PHP tuning
 RUN { \
         echo 'memory_limit = 512M'; \
         echo 'upload_max_filesize = 512M'; \
@@ -60,18 +50,10 @@ RUN { \
         echo 'session.cookie_httponly = 1'; \
     } > /usr/local/etc/php/conf.d/moodle.ini
 
-# Copy entrypoint that writes config.php at runtime
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
-# Set ownership
-RUN chown -R www-data:www-data /var/www/html \
-    && find /var/www/html -type d -exec chmod 755 {} \; \
-    && find /var/www/html -type f -exec chmod 644 {} \;
-
 VOLUME ["/var/moodledata"]
-
 EXPOSE 80
-
 ENTRYPOINT ["docker-entrypoint.sh"]
 CMD ["apache2-foreground"]
