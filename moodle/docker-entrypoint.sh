@@ -15,14 +15,14 @@ global \$CFG;
 \$CFG->dbport    = '${MOODLE_DB_PORT:-3306}';
 \$CFG->dbname    = '${MOODLE_DB_NAME:-moodle}';
 \$CFG->dbuser    = '${MOODLE_DB_USER:-moodle}';
-\$CFG->dbpass    = '${MOODLE_DB_PASSWORD:-moodlepassword}';
+\$CFG->dbpass    = '${MOODLE_DB_PASSWORD}';
 \$CFG->prefix    = 'mdl_';
 \$CFG->dboptions = [
     'dbcollation' => 'utf8mb4_unicode_ci',
 ];
 
 // Paths
-\$CFG->wwwroot   = '${MOODLE_WWWROOT:-http://localhost}';
+\$CFG->wwwroot   = '${MOODLE_WWWROOT}';
 \$CFG->dataroot  = '${MOODLE_DATAROOT:-/var/moodledata}';
 \$CFG->directorypermissions = 02777;
 

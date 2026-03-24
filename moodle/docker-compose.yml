@@ -5,10 +5,10 @@ services:
     image: mariadb:10.11
     restart: unless-stopped
     environment:
-      MARIADB_ROOT_PASSWORD: rootpassword
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
       MARIADB_DATABASE: moodle
       MARIADB_USER: moodle
-      MARIADB_PASSWORD: moodlepassword
+      MARIADB_PASSWORD: ${DB_PASSWORD}
     command: >
       --character-set-server=utf8mb4
       --collation-server=utf8mb4_unicode_ci
@@ -48,8 +48,8 @@ services:
       MOODLE_DB_PORT: 3306
       MOODLE_DB_NAME: moodle
       MOODLE_DB_USER: moodle
-      MOODLE_DB_PASSWORD: moodlepassword
-      MOODLE_WWWROOT: http://localhost
+      MOODLE_DB_PASSWORD: ${DB_PASSWORD}
+      MOODLE_WWWROOT: ${MOODLE_WWWROOT:-http://localhost}
       MOODLE_DATAROOT: /var/moodledata
       REDIS_HOST: redis
       REDIS_PORT: 6379
@@ -75,8 +75,8 @@ services:
       MOODLE_DB_PORT: 3306
       MOODLE_DB_NAME: moodle
       MOODLE_DB_USER: moodle
-      MOODLE_DB_PASSWORD: moodlepassword
-      MOODLE_WWWROOT: http://localhost
+      MOODLE_DB_PASSWORD: ${DB_PASSWORD}
+      MOODLE_WWWROOT: ${MOODLE_WWWROOT:-http://localhost}
       MOODLE_DATAROOT: /var/moodledata
       REDIS_HOST: redis
       REDIS_PORT: 6379
