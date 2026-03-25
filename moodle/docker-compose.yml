@@ -134,8 +134,10 @@ services:
     image: prom/mysqld-exporter:latest
     container_name: mysqld-exporter
     restart: unless-stopped
-    environment:
-      - DATA_SOURCE_NAME=moodle:${DB_PASSWORD}@(db:3306)/moodle
+    command:
+      - "--config.my-cnf=/etc/mysql/my.cnf"
+    volumes:
+      - ./mysqld-exporter.cnf:/etc/mysql/my.cnf:ro
     expose:
       - "9104"
     depends_on:

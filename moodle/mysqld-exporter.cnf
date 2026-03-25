@@ -1,0 +1,6 @@
+[client]
+host=db
+port=3306
+user=moodle
+password=moodlepassword
+
