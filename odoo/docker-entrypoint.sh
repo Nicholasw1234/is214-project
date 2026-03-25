@@ -16,21 +16,18 @@ ODOO_MAX_WORKERS="${MAX_WORKERS:-$(nproc)}"
 
 # Start Odoo with configuration
 exec odoo \
-    --database ${ODOO_DATABASE:-odoo} \
-    --db_host=${HOST:-db} \
-    --db_port=${PORT:-5432} \
-    --db_user=${USER:-odoo} \
-    --db_password=${PASSWORD} \
-    --db-filter=${ODOO_DB_FILTER:-.*} \
-    --admin_passwd=${ODOO_ADMIN_PASSWD:-admin} \
-    --workers=${ODOO_WORKERS} \
+    --database "${ODOO_DATABASE:-odoo}" \
+    --db_host="${HOST:-db}" \
+    --db_port="${PORT:-5432}" \
+    --db_user="${USER:-odoo}" \
+    --db_password="${PASSWORD}" \
+    --db-filter="${ODOO_DB_FILTER:-.*}" \
+    --workers="${ODOO_WORKERS}" \
     --max-cron-threads=2 \
     --limit-time-cpu=600 \
     --limit-time-real=900 \
     --limit-request=10000 \
-    --limit-memory-soft=2048 \
-    --limit-memory-hard=4096 \
-    --longpolling-port=8072 \
-    --data-dir=/var/lib/odoo \
-    --addons-path=/mnt/extra-addons,/usr/lib/python3/dist-packages/odoo/addons \
-    "$@"
+    --limit-memory-soft=0 \
+    --limit-memory-hard=0 \
+    --gevent-port=8072 \
+    --data-dir=/var/lib/odoo
