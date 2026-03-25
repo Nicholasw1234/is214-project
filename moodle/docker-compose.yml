@@ -1,5 +1,4 @@
 services:
-
   # ─── Database ────────────────────────────────────────────────────────────────
   db:
     image: mariadb:10.11
@@ -101,8 +100,110 @@ services:
       - moodle1
       - moodle2
 
+  # ─── Monitoring: exporters ────────────────────────────────────────────────────
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: node-exporter
+    restart: unless-stopped
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    expose:
+      - "9100"
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: cadvisor
+    restart: unless-stopped
+    privileged: true
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    expose:
+      - "8080"
+
+  mysqld-exporter:
+    image: prom/mysqld-exporter:latest
+    container_name: mysqld-exporter
+    restart: unless-stopped
+    environment:
+      - DATA_SOURCE_NAME=moodle:${DB_PASSWORD}@(db:3306)/moodle
+    expose:
+      - "9104"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  nginx-exporter:
+    image: nginx/nginx-prometheus-exporter:latest
+    container_name: nginx-exporter
+    restart: unless-stopped
+    command:
+      - '--nginx.scrape-uri=http://nginx/nginx_status'
+    expose:
+      - "9113"
+    depends_on:
+      - nginx
+
+  redis-exporter:
+    image: oliver006/redis_exporter:latest
+    container_name: redis-exporter
+    restart: unless-stopped
+    environment:
+      - REDIS_ADDR=redis://redis:6379
+    expose:
+      - "9121"
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  # ─── Monitoring: Prometheus ───────────────────────────────────────────────────
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    restart: unless-stopped
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.retention.time=15d'
+    expose:
+      - "9090"
+    depends_on:
+      - node-exporter
+      - cadvisor
+      - mysqld-exporter
+      - nginx-exporter
+      - redis-exporter
+
+  # ─── Monitoring: Grafana ──────────────────────────────────────────────────────
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin}
+      - GF_USERS_ALLOW_SIGN_UP=false
+    depends_on:
+      - prometheus
+
 volumes:
   mariadb_data:
   redis_data:
   moodle_data:
   moodledata:
+  prometheus_data:
+  grafana_data:
