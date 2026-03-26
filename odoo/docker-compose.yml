@@ -195,7 +195,7 @@ services:
     container_name: odoo-grafana
     restart: unless-stopped
     ports:
-      - "3001:3000"
+      - "3000:3000"
     volumes:
       - grafana_data:/var/lib/grafana
     environment:
