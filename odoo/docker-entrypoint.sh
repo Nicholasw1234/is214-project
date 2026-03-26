@@ -18,6 +18,9 @@ cat > /tmp/odoo-runtime.conf <<EOF
 [options]
 admin_passwd = ${ODOO_ADMIN_PASSWD}
 
+; Trust X-Forwarded-Proto from nginx so Odoo generates https:// URLs
+proxy_mode             = True
+
 ; Redis session store
 session_redis          = True
 redis_host             = ${REDIS_HOST:-redis}

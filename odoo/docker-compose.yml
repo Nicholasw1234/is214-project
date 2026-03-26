@@ -208,8 +208,7 @@ services:
     container_name: odoo-grafana
     restart: unless-stopped
     ports:
-      # FIX: Bind to localhost only — Grafana should not be publicly accessible
-      - "127.0.0.1:3000:3000"
+      - "0.0.0.0:3000:3000"
     volumes:
       - grafana_data:/var/lib/grafana
     environment:
