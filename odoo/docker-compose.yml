@@ -34,6 +34,9 @@ services:
       context: .
       dockerfile: Dockerfile
     restart: unless-stopped
+    expose:
+      - "8069"
+      - "8072"
     environment:
       HOST: db
       PORT: 5432
@@ -63,6 +66,9 @@ services:
       context: .
       dockerfile: Dockerfile
     restart: unless-stopped
+    expose:
+      - "8069"
+      - "8072"
     environment:
       HOST: db
       PORT: 5432
@@ -142,7 +148,7 @@ services:
 
   nginx-exporter:
     image: nginx/nginx-prometheus-exporter:latest
-    container_name: odoo-nginx
+    container_name: odoo-nginx-exporter
     restart: unless-stopped
     command:
       - '--nginx.scrape-uri=http://nginx/nginx_status'

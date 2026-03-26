@@ -15,6 +15,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     python3-pip \
     python3-setuptools \
     python3-wheel \
+    postgresql-client \
     && rm -rf /var/lib/apt/lists/* /tmp/*
 
 # Install additional Python dependencies for Odoo
@@ -51,5 +52,5 @@ RUN mkdir -p /mnt/extra-addons && chown -R odoo:odoo /mnt/extra-addons
 USER odoo
 VOLUME ["/mnt/extra-addons", "/var/lib/odoo"]
 EXPOSE 8069
-ENTRYPOINT ["docker-entrypoint.sh"]
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 CMD ["odoo"]
