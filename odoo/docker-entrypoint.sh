@@ -10,17 +10,25 @@ done
 
 echo "PostgreSQL is up - starting Odoo..."
 
-# Build Odoo command with workers configuration
 ODOO_WORKERS="${WORKERS:-$(nproc)}"
-ODOO_MAX_WORKERS="${MAX_WORKERS:-$(nproc)}"
 
-# Set admin password via config file (--admin-passwd flag removed in Odoo 17)
-echo "[options]" > /tmp/odoo-extra.conf
-echo "admin_passwd = ${ODOO_ADMIN_PASSWD}" >> /tmp/odoo-extra.conf
+# Build a merged runtime config that extends /etc/odoo/odoo.conf
+# (admin_passwd was removed as a CLI flag in Odoo 17 — must be in a conf file)
+cat > /tmp/odoo-runtime.conf <<EOF
+[options]
+admin_passwd = ${ODOO_ADMIN_PASSWD}
 
-# Start Odoo with configuration
+; Redis session store
+session_redis          = True
+redis_host             = ${REDIS_HOST:-redis}
+redis_port             = ${REDIS_PORT:-6379}
+redis_dbindex          = 0
+EOF
+
+# Start Odoo — load the shipped base config first, then our runtime overrides
 exec odoo \
-    --config=/tmp/odoo-extra.conf \
+    --config=/etc/odoo/odoo.conf \
+    --config=/tmp/odoo-runtime.conf \
     --database "${ODOO_DATABASE:-odoo}" \
     --db_host="${HOST:-db}" \
     --db_port="${PORT:-5432}" \

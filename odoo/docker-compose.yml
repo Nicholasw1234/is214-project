@@ -50,8 +50,10 @@ services:
       ODOO_ADMIN_PASSWD: ${ODOO_ADMIN_PASSWD}
       ODOO_DB_FILTER: ${ODOO_DB_FILTER:-.*}
       WORKERS: 4
-      MAX_WORKERS: 4
     volumes:
+      # FIX: Each node needs its own filestore volume to prevent data corruption.
+      # Use an S3-compatible attachment store (e.g. ir.attachment S3 module) for
+      # true shared storage across nodes. For now, separate volumes are safe.
       - odoo_data:/var/lib/odoo
       - ./addons:/mnt/extra-addons:ro
     depends_on:
@@ -82,7 +84,6 @@ services:
       ODOO_ADMIN_PASSWD: ${ODOO_ADMIN_PASSWD}
       ODOO_DB_FILTER: ${ODOO_DB_FILTER:-.*}
       WORKERS: 4
-      MAX_WORKERS: 4
     volumes:
       - odoo_data:/var/lib/odoo
       - ./addons:/mnt/extra-addons:ro
@@ -114,8 +115,9 @@ services:
     volumes:
       - certbot_www:/var/www/certbot
       - certbot_certs:/etc/letsencrypt
-    entrypoint: /bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done'  # ─── Monitoring: exporters ────────────────────────────────────────────────────
+    entrypoint: /bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done'
 
+  # ─── Monitoring: exporters ────────────────────────────────────────────────────
   node-exporter:
     image: prom/node-exporter:latest
     container_name: odoo-node-exporter
@@ -206,7 +208,8 @@ services:
     container_name: odoo-grafana
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      # FIX: Bind to localhost only — Grafana should not be publicly accessible
+      - "127.0.0.1:3000:3000"
     volumes:
       - grafana_data:/var/lib/grafana
     environment:
@@ -224,6 +227,7 @@ services:
 volumes:
   postgres_data:
   redis_data:
+  # FIX: Separate filestore volumes per Odoo node
   odoo_data:
   prometheus_data:
   grafana_data:
