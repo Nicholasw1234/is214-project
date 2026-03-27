@@ -214,7 +214,7 @@ services:
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin}
       - GF_USERS_ALLOW_SIGN_UP=false
-      - GF_SERVER_ROOT_URL=https://is214g09t07mile3odooproductionvm.eastasia.cloudapp.azure.com/grafana
+      - GF_SERVER_ROOT_URL=https://is214g09t07mile3odoostagingvm.eastasia.cloudapp.azure.com/grafana
       - GF_SERVER_SERVE_FROM_SUB_PATH=true
       - GF_SMTP_ENABLED=true
       - GF_SMTP_HOST=smtp.gmail.com:587
