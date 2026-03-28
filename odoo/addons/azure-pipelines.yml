@@ -1,0 +1,111 @@
+trigger:
+  branches:
+    include:
+      - Staging
+      - master
+
+pool:
+  name: Default
+
+variables:
+  repoUrl: 'https://github.com/yezhan58-oss/e08g09t07-odoo17.git'
+  updateScript: '/home/is214/deploy-temp/update_code.sh'
+  stagePath: '/home/is214/'
+
+stages:
+
+# =========================
+# STAGING STAGE (Leave as is)
+# =========================
+- stage: Staging
+  displayName: Deploy to Staging
+  condition: eq(variables['Build.SourceBranchName'], 'Staging')
+  jobs:
+  - deployment: DeployStaging
+    environment: Staging
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - task: SSH@0
+            displayName: "Sync Code"
+            inputs:
+              sshEndpoint: 'ssh-odoo17-staging'
+              runOptions: commands
+              commands: |
+                set -e
+                cd /home/is214/
+                rm -rf deploy-temp
+                git clone -b $(Build.SourceBranchName) $(repoUrl) deploy-temp --quiet
+                cd deploy-temp
+                rm -f .DS_Store
+                rm -rf .github
+          - task: SSH@0
+            displayName: "Run Update Script - Staging"
+            inputs:
+              sshEndpoint: 'ssh-odoo17-staging'
+              runOptions: commands
+              commands: |
+                echo "$(STAGINGUSERPASSWORD)" | sudo -S -p '' chmod +x $(updateScript)
+                echo "$(STAGINGUSERPASSWORD)" | sudo -S -p '' $(updateScript)
+
+# =========================
+# PRODUCTION STAGE (Updated for Docker)
+# =========================
+- stage: Production
+  displayName: Deploy to Production
+  condition: eq(variables['Build.SourceBranchName'], 'master')
+  jobs:
+  - deployment: DeployProduction
+    environment: Production
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - task: SSH@0
+            displayName: "Sync Code"
+            inputs:
+              sshEndpoint: 'ssh-odoo17-prod'
+              runOptions: commands
+              commands: |
+                set -e
+                cd /home/is214/
+                rm -rf deploy-temp
+                git clone -b $(Build.SourceBranchName) $(repoUrl) deploy-temp --quiet
+                cd deploy-temp
+                rm -f .DS_Store
+                rm -rf .github
+
+          # --- DATABASE RESTORE (COMMENTED OUT FOR SAFETY) ---
+          # Uncomment the steps below only if you want to WIPE the PROD DB and restore from SQL.
+          
+          # - task: SSH@0
+          #   displayName: "Uncompress odoo.sql.gz"
+          #   inputs:
+          #     sshEndpoint: 'ssh-odoo17-prod'
+          #     runOptions: commands
+          #     commands: |
+          #       set -e
+          #       cd /home/is214/deploy-temp/
+          #       gunzip -c odoo.sql.gz > odoo.sql
+
+          # - task: SSH@0
+          #   displayName: "Restore Database via Docker"
+          #   inputs:
+          #     sshEndpoint: 'ssh-odoo17-prod'
+          #     runOptions: commands
+          #     commands: |
+          #       set -e
+          #       # Drops DB, Creates DB, and Pipes SQL into the Container
+          #       sudo docker exec -u postgres odoo-db-1 psql -c "DROP DATABASE IF EXISTS odoo;"
+          #       sudo docker exec -u postgres odoo-db-1 psql -c "CREATE DATABASE odoo OWNER odoo;"
+          #       cat /home/is214/deploy-temp/odoo.sql | sudo docker exec -i odoo-db-1 psql -U odoo -d odoo
+
+          - task: SSH@0
+            displayName: "Run Update Script - Production"
+            inputs:
+              sshEndpoint: 'ssh-odoo17-prod'
+              runOptions: commands
+              commands: |
+                echo "$(STAGINGUSERPASSWORD)" | sudo -S -p '' chmod +x $(updateScript)
+                echo "$(STAGINGUSERPASSWORD)" | sudo -S -p '' $(updateScript)
