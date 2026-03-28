@@ -1,5 +1,0 @@
-- [Cetmix OÜ](https://cetmix.com):
-  - Ivan Sokolov
-  - Mikhail Lapin
-  - Dessan Hemrayev
-  - Maksim Shurupov

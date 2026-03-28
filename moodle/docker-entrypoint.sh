@@ -27,9 +27,10 @@ global \$CFG;
 \$CFG->directorypermissions = 02777;
 
 // Cluster / reverse proxy
-\$CFG->reverseproxy    = false;
-\$CFG->sslproxy        = false;
-\$CFG->cookiesecure    = false;
+// nginx terminates TLS and forwards X-Forwarded-Proto: https
+\$CFG->reverseproxy    = true;
+\$CFG->sslproxy        = true;
+\$CFG->cookiesecure    = true;
 
 // Redis session and cache store
 \$CFG->session_handler_class = '\core\session\redis';

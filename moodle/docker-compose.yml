@@ -48,7 +48,7 @@ services:
       MOODLE_DB_NAME: moodle
       MOODLE_DB_USER: moodle
       MOODLE_DB_PASSWORD: ${DB_PASSWORD}
-      MOODLE_WWWROOT: ${MOODLE_WWWROOT:-http://localhost}
+      MOODLE_WWWROOT: ${MOODLE_WWWROOT}   # must be https://yourdomain.com
       MOODLE_DATAROOT: /var/moodledata
       REDIS_HOST: redis
       REDIS_PORT: 6379
@@ -75,7 +75,7 @@ services:
       MOODLE_DB_NAME: moodle
       MOODLE_DB_USER: moodle
       MOODLE_DB_PASSWORD: ${DB_PASSWORD}
-      MOODLE_WWWROOT: ${MOODLE_WWWROOT:-http://localhost}
+      MOODLE_WWWROOT: ${MOODLE_WWWROOT}   # must be https://yourdomain.com
       MOODLE_DATAROOT: /var/moodledata
       REDIS_HOST: redis
       REDIS_PORT: 6379
@@ -94,11 +94,30 @@ services:
     restart: unless-stopped
     ports:
       - "80:80"
+      - "443:443"
     volumes:
       - ./nginx/moodle.conf:/etc/nginx/conf.d/default.conf:ro
+      - certbot_www:/var/www/certbot:ro          # ACME challenge files
+      - certbot_certs:/etc/letsencrypt:ro        # TLS certificates
     depends_on:
       - moodle1
       - moodle2
+
+  # ─── Certbot (initial issue + scheduled renewal) ─────────────────────────────
+  # First run: `docker compose run --rm certbot` to obtain the certificate.
+  # Renewal:   the container's CMD runs `renew` and then sleeps 12 h in a loop,
+  #            so just keep it running alongside nginx.
+  certbot:
+    image: certbot/certbot:latest
+    restart: unless-stopped
+    volumes:
+      - certbot_www:/var/www/certbot          # written by certbot, read by nginx
+      - certbot_certs:/etc/letsencrypt        # persistent cert storage
+    # Loop: renew (no-op when cert is fresh) every 12 hours.
+    # certbot renew uses the saved --webroot config from the first run.
+    entrypoint: /bin/sh -c 'trap exit TERM; while :; do certbot renew --webroot -w /var/www/certbot --quiet; sleep 12h & wait $${!}; done'
+    depends_on:
+      - nginx
 
   # ─── Monitoring: exporters ────────────────────────────────────────────────────
   node-exporter:
@@ -209,3 +228,5 @@ volumes:
   moodledata:
   prometheus_data:
   grafana_data:
+  certbot_www:    # ACME challenge webroot
+  certbot_certs:  # Let's Encrypt certs + account data
